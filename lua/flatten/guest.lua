@@ -22,6 +22,7 @@ function M.maybe_block(block)
   end
   vim.fn.chanclose(host)
   while true do
+    vim.g.flatten_is_blocking = true
     vim.cmd.sleep(1)
   end
 end
@@ -115,6 +116,8 @@ function M.init(host_pipe)
   if config.callbacks.should_nest and config.callbacks.should_nest(host) then
     return
   end
+
+  vim.g.flatten_is_nested = true
 
   -- Get new files
   local files = vim.fn.argv()

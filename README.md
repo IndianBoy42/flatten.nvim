@@ -111,6 +111,13 @@ Execute a command in the host instance, after opening files:
 nvim +<cmd>
 ```
 
+```lua
+-- if the current neovim instance is nested and sending files to the host
+vim.g.flatten_is_nested
+-- if the current neovim instance is blocking and waiting for the host
+vim.g.flatten_is_blocking
+```
+
 ## Configuration
 
 ### Defaults

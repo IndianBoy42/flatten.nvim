@@ -143,7 +143,10 @@ local config = {
     ---config.nest_if_no_args is respected.
     ---@type fun(host: channel):boolean
     should_nest = require("flatten").default_should_nest,
+    ---Called on the guest side to add any additional information to be used by host-side callbacks
+    guest_args = function(argv, files, stdin) end,
     ---Called before a nested session is opened.
+    ---@param guest_args any
     pre_open = function() end,
     ---Called after a nested session is opened.
     ---@param bufnr buffer
@@ -151,10 +154,20 @@ local config = {
     ---@param filetype string
     ---@param is_blocking boolean
     ---@param is_diff boolean
-    post_open = function(bufnr, winnr, filetype, is_blocking, is_diff) end,
+    ---@param guest_args any
+    post_open = function(
+      bufnr,
+      winnr,
+      filetype,
+      is_blocking,
+      is_diff,
+      guest_args
+    )
+    end,
     ---Called when a nested session is done waiting for the host.
     ---@param filetype string
-    block_end = function(filetype) end,
+    ---@param guest_args any
+    block_end = function(filetype, guest_args) end,
   },
   -- <String, Bool> dictionary of filetypes that should be blocking
   block_for = {

@@ -12,7 +12,7 @@ function M.unblock_guest(guest_pipe)
   vim.fn.chanclose(response_sock)
 end
 
-function M.notify_when_done(pipe, bufnr, callback, ft)
+function M.notify_when_done(pipe, bufnr, callback, ft, guest_args)
   vim.api.nvim_create_autocmd({ "QuitPre", "BufUnload", "BufDelete" }, {
     buffer = bufnr,
     once = true,
@@ -20,7 +20,7 @@ function M.notify_when_done(pipe, bufnr, callback, ft)
     callback = function()
       vim.api.nvim_del_augroup_by_id(M.augroup)
       M.unblock_guest(pipe)
-      callback(ft)
+      callback(ft, guest_args)
     end,
   })
 end
@@ -80,7 +80,7 @@ function M.smart_open(focus)
   end
 end
 
-local exec_cmd = require'flatten.utils'.exec_cmd
+local exec_cmd = require("flatten.utils").exec_cmd
 
 ---@class EditFilesOptions
 ---@field files table          list of files passed into nested instance
@@ -89,6 +89,7 @@ local exec_cmd = require'flatten.utils'.exec_cmd
 ---@field argv table           full list of options passed to the nested instance, see v:argv
 ---@field stdin table          stdin lines or {}
 ---@field force_block boolean  enable blocking
+---@field guest_args any       custom guest args
 
 ---@param opts EditFilesOptions
 ---@return boolean
@@ -99,6 +100,7 @@ function M.edit_files(opts)
   local stdin = opts.stdin
   local force_block = opts.force_block
   local argv = opts.argv
+  local guest_args = opts.guest_args
   local config = require("flatten").config
   local callbacks = config.callbacks
   local focus_first = config.window.focus == "first"
@@ -133,7 +135,7 @@ function M.edit_files(opts)
     end
   end
 
-  callbacks.pre_open()
+  callbacks.pre_open(guest_args)
 
   -- Open files
   if nfiles > 0 then
@@ -276,16 +278,23 @@ function M.edit_files(opts)
   end
 
   callbacks.post_open(
-    bufnr --[[@as integer]],
-    winnr --[[@as integer]],
+    bufnr, --[[@as integer]]
+    winnr, --[[@as integer]]
     ft,
     block,
-    is_diff
+    is_diff,
+    guest_args
   )
 
   if block then
     M.augroup = vim.api.nvim_create_augroup("flatten_notify", { clear = true })
-    M.notify_when_done(response_pipe, bufnr, callbacks.block_end, ft)
+    M.notify_when_done(
+      response_pipe,
+      bufnr,
+      callbacks.block_end,
+      ft,
+      guest_args
+    )
   end
   return block
 end

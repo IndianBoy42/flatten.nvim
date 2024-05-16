@@ -41,6 +41,11 @@ local function send_files(files, stdin, argv)
     cwd = sanitize(cwd)
   end
 
+  local guest_args = require("flatten").config.callbacks.guest_args
+  if type(guest_args) == "function" then
+    guest_args = guest_args(files, argv, stdin)
+  end
+
   local call = string.format(
     [[return require('flatten.core').edit_files(%s)]],
     vim.inspect({
@@ -50,6 +55,7 @@ local function send_files(files, stdin, argv)
       stdin = stdin,
       argv = argv,
       force_block = force_block,
+      guest_args = guest_args,
     })
   )
 
